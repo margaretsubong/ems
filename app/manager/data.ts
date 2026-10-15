@@ -1,0 +1,38 @@
+export type Employee = { id: string; name: string; position: string; role: string; team: string; status: string; email: string };
+export const employees: Employee[] = [
+  { id: "EMP-4092", name: "Alex Chen", position: "Senior Frontend Engineer", role: "Frontend", team: "Core Platform", status: "Full-Time", email: "alex.chen@company.com" },
+  { id: "EMP-5104", name: "Maya Lin", position: "Staff Backend Engineer", role: "Backend", team: "API Services", status: "Full-Time", email: "maya.lin@company.com" },
+  { id: "EMP-3891", name: "Marcus Vance", position: "Senior DevOps Engineer", role: "DevOps", team: "Cloud Infra", status: "On Leave", email: "marcus.vance@company.com" },
+  { id: "EMP-6220", name: "Priya Patel", position: "Lead QA Automation", role: "QA", team: "QA", status: "Full-Time", email: "priya.patel@company.com" },
+  { id: "EMP-7319", name: "Lucas Graham", position: "Full Stack Developer", role: "Frontend", team: "Core Platform", status: "Contract", email: "lucas.graham@company.com" },
+  { id: "EMP-8941", name: "Elena Rostova", position: "Cloud Architect", role: "DevOps", team: "Infrastructure", status: "Full-Time", email: "elena.r@company.com" },
+];
+export type ManagerTask = { id: string; title: string; description: string; employee: string; priority: string; status: string; due: string; progress: number; notes: string };
+export const managerTasks: ManagerTask[] = [
+  { id: "TASK-409", title: "Finalize Q4 API Authentication Documentation", description: "Review OAuth2 session workflows and update the API documentation before the security compliance freeze.", employee: "EMP-4092", priority: "High", status: "In Progress", due: "2026-10-24", progress: 65, notes: "Token refresh endpoint specs are complete." },
+  { id: "TASK-410", title: "Biometric Attendance Gateway Sync Service", description: "Implement reliable attendance synchronization with retry handling and clear event logs.", employee: "EMP-5104", priority: "High", status: "To Do", due: "2026-10-26", progress: 0, notes: "" },
+  { id: "TASK-411", title: "Database Migration for Leave Ledger Tables", description: "Prepare the leave ledger schema proposal and document the validation checklist.", employee: "EMP-3891", priority: "Medium", status: "In Progress", due: "2026-10-28", progress: 40, notes: "Schema review scheduled." },
+  { id: "TASK-412", title: "Automated End-to-End Test Suite for Auth Flows", description: "Cover account activation, login, and password reset flows in the test plan.", employee: "EMP-6220", priority: "Medium", status: "In Progress", due: "2026-10-30", progress: 30, notes: "" },
+  { id: "TASK-413", title: "Employee Directory Accessibility Review", description: "Review keyboard navigation and labels across employee directory controls.", employee: "EMP-7319", priority: "Low", status: "Completed", due: "2026-10-14", progress: 100, notes: "Review complete." },
+  { id: "TASK-414", title: "Cloud Cost and Reliability Report", description: "Summarize infrastructure usage and identify reliability improvements for the next sprint.", employee: "EMP-8941", priority: "Medium", status: "To Do", due: "2026-11-02", progress: 0, notes: "" },
+  { id: "TASK-415", title: "Review Multi-Factor Authentication Handshake", description: "Review the proposed authentication handshake and share engineering feedback.", employee: "EMP-4092", priority: "High", status: "In Progress", due: "2026-10-27", progress: 50, notes: "" },
+];
+export type ManagerLeaveRequest = { id: number; employee: string; type: string; start: string; end: string; days: number; reason: string; status: string; submitted: string; feedback: string };
+export const managerLeaves: ManagerLeaveRequest[] = [
+  { id: 1, employee: "EMP-3891", type: "Annual Vacation", start: "2026-10-28", end: "2026-10-30", days: 3, reason: "Family travel planned for the school holiday. Handover notes will be shared before departure.", status: "Pending", submitted: "2026-10-15", feedback: "" },
+  { id: 2, employee: "EMP-6220", type: "Sick Leave", start: "2026-10-21", end: "2026-10-22", days: 2, reason: "Scheduled medical appointment and recovery.", status: "Pending", submitted: "2026-10-14", feedback: "" },
+  { id: 3, employee: "EMP-7319", type: "Casual Leave", start: "2026-11-04", end: "2026-11-04", days: 1, reason: "Personal appointment requiring a full day away from work.", status: "Pending", submitted: "2026-10-13", feedback: "" },
+  { id: 4, employee: "EMP-4092", type: "Annual Vacation", start: "2026-05-02", end: "2026-05-08", days: 5, reason: "Family holiday.", status: "Approved", submitted: "2026-04-24", feedback: "Coverage confirmed." },
+  { id: 5, employee: "EMP-5104", type: "Sick Leave", start: "2026-09-14", end: "2026-09-15", days: 2, reason: "Medical appointment and rest.", status: "Approved", submitted: "2026-09-13", feedback: "" },
+  { id: 6, employee: "EMP-8941", type: "Casual Leave", start: "2026-10-12", end: "2026-10-12", days: 1, reason: "Personal errand.", status: "Rejected", submitted: "2026-10-10", feedback: "Please coordinate a date with available team coverage." },
+];
+export type ManagerAnnouncement = { id: number; title: string; content: string; category: string; status: string; date: string; pinned: boolean };
+export const managerAnnouncements: ManagerAnnouncement[] = [
+  { id: 1, title: "Engineering Sprint 42 Freeze & Release Window", content: "Code freeze begins this Thursday at 5 PM. Please merge approved changes, update your task status, and share any release blockers in the engineering channel. Release verification starts Friday morning.", category: "Sprint & Delivery", status: "Active", date: "2026-10-15", pinned: true },
+  { id: 2, title: "Mandatory Security Drill & Cloud Access Rotation", content: "All engineering staff must update cloud access credentials through the approved company process by the end of this week. The security team will host a guided drill on Thursday at 2 PM.", category: "Security & Policy", status: "Active", date: "2026-10-14", pinned: true },
+  { id: 3, title: "Q3 Architecture Review & Performance Retro", content: "Review meeting scheduled for the platform and infrastructure teams. Bring your service performance observations and proposals for the next quarter.", category: "Architecture & Tech", status: "Archived", date: "2026-09-29", pinned: false },
+  { id: 4, title: "Welcome New Team Members to Core Platform", content: "Please join us in welcoming Lucas to the Core Platform team. We look forward to building reliable employee tools together.", category: "Team Notice", status: "Archived", date: "2026-08-12", pinned: false },
+  { id: 5, title: "Scheduled Database Maintenance & Read-Only Window", content: "The staging database maintenance window is scheduled for October 25. Please save your work and coordinate test runs with DevOps.", category: "Architecture & Tech", status: "Draft", date: "2026-10-15", pinned: false },
+];
+export const managerProfile = { name: "Sarah Connor", email: "sarah.connor@company.com", phone: "+1 (555) 382-9184", address: "San Francisco HQ · Engineering, Floor 4", emergency: "John Connor", emergencyPhone: "+1 (555) 288-9011" };
+export const departmentAttendance = employees.flatMap((employee, index) => ["2026-10-15", "2026-10-14", "2026-10-13"].map((date, day) => ({ id: `${employee.id}-${date}`, employee: employee.id, date, timeIn: index === 2 ? "—" : index === 4 && day === 0 ? "09:12 AM" : "08:54 AM", timeOut: index === 2 ? "—" : day === 0 ? "—" : "05:32 PM", hours: index === 2 ? "—" : day === 0 ? "In Session" : "8h 38m", status: index === 2 ? "On Leave" : index === 4 && day === 0 ? "Late" : "Present" })));

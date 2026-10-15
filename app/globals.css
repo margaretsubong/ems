@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #111827;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-background: #ffffff;
+  --color-foreground: #111827;
+  --color-primary: #6554f4;
+  --color-primary-hover: #5240e3;
+  --color-primary-light: #eeebff;
+  --color-error: #dc2626;
+  --color-error-light: #fef2f2;
+  --color-success: #16a34a;
+  --color-success-light: #f0fdf4;
+  --color-muted: #4b5563;
+  --color-border: #e2e8f0;
+  --color-input-border: #cbd5e1;
+  --color-input-focus: #6554f4;
+  --color-heading: #111827;
+  --color-body: #374151;
+  --color-label: #374151;
+  --color-placeholder: #6b7280;
+  --color-link: #6554f4;
+  --color-link-hover: #5240e3;
+  --color-icon: #6b7280;
+  --color-icon-hover: #374151;
+  --color-card: #ffffff;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Custom checkbox styling */
+input[type="checkbox"] {
+  accent-color: #6554f4;
+}
+
+/* Focus ring for accessibility */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  outline: 2px solid #6554f4;
+  outline-offset: 2px;
+}
