@@ -1,9 +1,11 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { secureCookies, supabaseConfig } from "./config";
 
 export async function createSessionClient(remember?: boolean) {
+  await connection();
   const store = await cookies();
   const { url, key } = supabaseConfig();
   const persist = remember ?? store.get("ems-remember")?.value === "1";

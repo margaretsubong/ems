@@ -84,8 +84,8 @@ export default function SetupAccountPage() {
           Account Activated!
         </h1>
         <p className="text-sm text-gray-600 mb-6 max-w-sm">
-          Your account has been successfully set up. You can now sign in with
-          your new credentials.
+          Your credentials have been updated. Sign in again with your new
+          username and password.
         </p>
         <Link
           href="/login"
@@ -103,10 +103,10 @@ export default function SetupAccountPage() {
       <div className="mb-6">
         <EMSLogo className="mb-4" />
         <h1 className="text-2xl font-bold text-gray-900">
-          Set up your account
+          Update your credentials
         </h1>
         <p className="text-sm text-gray-600 mt-1">
-          Create your username and password to complete activation.
+          Replace your temporary username and password to finish activating your account.
         </p>
       </div>
 
@@ -126,7 +126,7 @@ export default function SetupAccountPage() {
           id="setup-username"
           label="Username"
           type="text"
-          placeholder="Choose a username"
+          placeholder="Choose a new username"
           value={username}
           onChange={(val) => {
             setUsername(val);

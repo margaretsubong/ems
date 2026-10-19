@@ -1,5 +1,5 @@
 import "server-only";
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, randomInt } from "node:crypto";
 import { cookies } from "next/headers";
 import { createAdminClient } from "../supabase/admin";
 import { secureCookies } from "../supabase/config";
@@ -7,6 +7,17 @@ import { getAuthContext } from "./session";
 
 export type FlowPurpose = "activation" | "recovery";
 export function hashValue(value: string) { return createHash("sha256").update(value).digest("hex"); }
+
+const passwordSets = ["ABCDEFGHJKLMNPQRSTUVWXYZ", "abcdefghijkmnpqrstuvwxyz", "23456789", "!@#$%*?-"];
+export function temporaryCredentials(employeeId: string) {
+  const pick = (set: string) => set[randomInt(set.length)];
+  const characters = [...passwordSets.map(pick), ...Array.from({ length: 10 }, () => pick(passwordSets.join("")))];
+  for (let index = characters.length - 1; index > 0; index--) {
+    const swap = randomInt(index + 1);
+    [characters[index], characters[swap]] = [characters[swap], characters[index]];
+  }
+  return { username: `${employeeId.toLowerCase()}-${randomBytes(3).toString("hex")}`, password: characters.join("") };
+}
 
 export async function takeRateLimit(key: string, limit: number, seconds: number) {
   const { data, error } = await createAdminClient().rpc("take_auth_rate_limit", {

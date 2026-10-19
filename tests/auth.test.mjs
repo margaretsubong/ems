@@ -17,9 +17,9 @@ function loadModule(path, imports, globals = {}) {
 
 function harness(role = "employee", status = "active") {
   const account = policy.authorizedAccounts.find((entry) => entry.role === role);
-  const profile = { id: "test-user", employee_id: account.employeeId, email: account.email, username: "test.user", role, account_status: status, activated_at: status === "active" ? "2026-10-15T00:00:00Z" : null };
-  const user = { id: profile.id, email: account.email, email_confirmed_at: status === "active" ? "2026-10-15T00:00:00Z" : undefined };
-  const state = { profile, user, rateAllowed: true, credentialsValid: true, tokenValid: true, hasProof: false, emailCount: 0, passwordWrites: 0, cookieClears: 0, issuedPurpose: null, providerFails: false, updates: [], jobs: [] };
+  const profile = { id: "test-user", employee_id: account.employeeId, email: account.email, username: status === "pending" ? "emp-4092-temp01" : "test.user", role, account_status: status, activated_at: status === "active" ? "2026-10-15T00:00:00Z" : null };
+  const user = { id: profile.id, email: account.email, email_confirmed_at: status === "active" ? "2026-10-15T00:00:00Z" : undefined, app_metadata: {} };
+  const state = { profile, user, rateAllowed: true, credentialsValid: true, tokenValid: true, hasProof: false, emailCount: 0, passwordWrites: 0, cookieClears: 0, issuedPurpose: null, providerFails: false, updates: [], jobs: [], sentCredentials: null, userUpdates: [] };
   const store = { set() {}, delete() {} };
   const table = () => {
     let update;
@@ -39,6 +39,7 @@ function harness(role = "employee", status = "active") {
   };
   const admin = { from: table, auth: { admin: {
     async getUserById() { return { data: { user }, error: null }; },
+    async updateUserById(id, attributes) { assert.equal(id, user.id); state.userUpdates.push(attributes); if (attributes.app_metadata) user.app_metadata = { ...user.app_metadata, ...attributes.app_metadata }; return { data: { user }, error: null }; },
     async generateLink() { return { data: { user, properties: { hashed_token: "a".repeat(64) } }, error: null }; },
   } } };
   const actions = loadModule("../app/lib/auth/actions.ts", {
@@ -49,9 +50,10 @@ function harness(role = "employee", status = "active") {
     "../supabase/config": { secureCookies: {} },
     "../supabase/server": { createSessionClient: async () => client },
     "./policy": policy,
-    "./email": { applicationUrl: () => "https://ems.example", async sendAuthEmail() { if (state.providerFails) throw new Error("Provider unavailable"); state.emailCount++; } },
+    "./email": { applicationUrl: () => "https://ems.example", async sendAuthEmail() { if (state.providerFails) throw new Error("Provider unavailable"); state.emailCount++; }, async sendActivationEmail(email, username, password, loginUrl) { if (state.providerFails) throw new Error("Provider unavailable"); state.emailCount++; state.sentCredentials = { email, username, password, loginUrl }; } },
     "./flows": {
       takeRateLimit: async () => state.rateAllowed,
+      temporaryCredentials: (employeeId) => ({ username: `${employeeId.toLowerCase()}-abc123`, password: "Temp-Password42!" }),
       async issueFlow(userId, sessionId, purpose) { assert.equal(userId, user.id); assert.equal(sessionId, "test-session"); state.hasProof = true; state.issuedPurpose = purpose; },
       async verifiedFlow(purpose, consume) { if (!state.hasProof || (purpose === "activation" ? profile.account_status !== "pending" : profile.account_status !== "active")) return null; if (consume) state.hasProof = false; return { client, user, profile }; },
     },
@@ -84,6 +86,12 @@ for (const role of ["employee", "department_manager"]) {
     assert.equal((await actions.requestActivation(account.employeeId, account.email)).success, true);
     assert.equal(state.emailCount, 1);
     assert.equal(state.profile.account_status, "pending");
+    const temporaryUsername = `${account.employeeId.toLowerCase()}-abc123`;
+    assert.deepEqual(state.sentCredentials, { email: account.email, username: temporaryUsername, password: "Temp-Password42!", loginUrl: "https://ems.example/login" });
+    assert.equal(state.profile.username, temporaryUsername);
+    assert.equal(state.userUpdates[0].password, "Temp-Password42!");
+    assert.equal(state.userUpdates[0].email_confirm, true);
+    assert.ok(Date.parse(state.user.app_metadata.temp_credentials_expires_at) > Date.now());
     state.rateAllowed = false;
     assert.equal((await actions.requestActivation(account.employeeId, account.email)).success, false);
     assert.equal(state.emailCount, 1);
@@ -108,29 +116,46 @@ test("duplicate activation is rejected for active accounts", async () => {
   assert.equal(state.emailCount, 0);
 });
 
-test("expired, malformed, wrong-purpose, and reused email tokens do not issue proofs", async () => {
+test("temporary credentials open the credential update form only while unexpired", async () => {
   const { actions, state } = harness("employee", "pending");
-  assert.equal((await actions.verifyEmailLink("invalid", "invite", "activation")).success, false);
-  assert.equal((await actions.verifyEmailLink("a".repeat(64), "recovery", "activation")).success, false);
-  state.tokenValid = false;
-  assert.equal((await actions.verifyEmailLink("a".repeat(64), "invite", "activation")).success, false);
+  assert.equal((await actions.login("emp-4092-temp01", "Temp-Password42!")).success, false);
   assert.equal(state.hasProof, false);
-  state.tokenValid = true;
-  assert.equal((await actions.verifyEmailLink("a".repeat(64), "invite", "activation")).redirectTo, "/setup-account");
+  assert.equal(state.cookieClears, 1);
+  state.user.app_metadata = { temp_credentials_expires_at: new Date(Date.now() + 60000).toISOString() };
+  const result = await actions.login("emp-4092-temp01", "Temp-Password42!");
+  assert.equal(result.redirectTo, "/setup-account");
   assert.equal(state.issuedPurpose, "activation");
-  assert.equal((await actions.verifyEmailLink("a".repeat(64), "invite", "activation")).success, false);
+  state.credentialsValid = false;
+  assert.equal((await actions.login("emp-4092-temp01", "Wrong-Password42!")).success, false);
+  assert.equal((await actions.login("bad name", "Temp-Password42!")).success, false);
 });
 
-test("setup requires verified proof, consumes it once, and activates after saving the password", async () => {
+test("expired, malformed, activation-purpose, and reused email tokens do not issue proofs", async () => {
+  const { actions, state } = harness();
+  assert.equal((await actions.verifyEmailLink("invalid", "recovery", "recovery")).success, false);
+  assert.equal((await actions.verifyEmailLink("a".repeat(64), "invite", "activation")).success, false);
+  state.tokenValid = false;
+  assert.equal((await actions.verifyEmailLink("a".repeat(64), "recovery", "recovery")).success, false);
+  assert.equal(state.hasProof, false);
+  state.tokenValid = true;
+  assert.equal((await actions.verifyEmailLink("a".repeat(64), "recovery", "recovery")).redirectTo, "/reset-password");
+  assert.equal(state.issuedPurpose, "recovery");
+  assert.equal((await actions.verifyEmailLink("a".repeat(64), "recovery", "recovery")).success, false);
+});
+
+test("setup requires verified proof, a new username, consumes the proof once, and activates after saving the password", async () => {
   const { actions, state } = harness("employee", "pending");
   const password = "Valid-Test-Password42!";
   assert.equal((await actions.setupAccount("test.user", password, password)).success, false);
   assert.equal(state.passwordWrites, 0);
   state.hasProof = true;
+  assert.equal((await actions.setupAccount("emp-4092-temp01", password, password)).success, false);
+  assert.equal(state.hasProof, true);
   assert.equal((await actions.setupAccount("test.user", password, password)).success, true);
   assert.equal(state.passwordWrites, 1);
   assert.equal(state.profile.account_status, "active");
   assert.equal(state.profile.username, "test.user");
+  assert.equal(state.user.app_metadata.temp_credentials_expires_at, null);
   assert.equal((await actions.setupAccount("test.user", password, password)).success, false);
 });
 
@@ -225,11 +250,11 @@ test("proxy denies anonymous, inactive, tampered-role, and cross-role portal acc
   assert.equal((await proxy(request("/manager/tasks"))).location, null);
   user = null;
   assert.equal((await proxy(request("/manager/tasks"))).location, "/login");
-  assert.equal((await proxy(request("/setup-account"))).location, "/activate-account?error=verification-required");
+  assert.equal((await proxy(request("/setup-account"))).location, "/login");
   assert.equal((await proxy(request("/reset-password"))).location, "/forgot-password?error=verification-required");
 });
 
-for (const [purpose, type, destination] of [["activation", "invite", "/setup-account"], ["recovery", "recovery", "/reset-password"]]) {
+for (const [purpose, type, destination] of [["recovery", "recovery", "/reset-password"]]) {
   test(`${purpose} email link verifies automatically once during effect replay and opens credentials`, async () => {
     const effects = [];
     const navigations = [];
@@ -258,3 +283,14 @@ for (const [purpose, type, destination] of [["activation", "invite", "/setup-acc
     assert.equal(cleared, true);
   });
 }
+
+test("SSR auth client waits for a real request before the SDK reads session time", async () => {
+  let connected = false;
+  const { createSessionClient } = loadModule("../app/lib/supabase/server.ts", {
+    "next/server": { async connection() { connected = true; } },
+    "next/headers": { cookies: async () => ({ get: () => undefined, getAll: () => [], set() {} }) },
+    "@supabase/ssr": { createServerClient() { assert.equal(connected, true, "SDK session clock must not execute during prerendering"); return { ready: true }; } },
+    "./config": { secureCookies: {}, supabaseConfig: () => ({ url: "https://project.supabase.co", key: "test-public-key" }) },
+  });
+  assert.equal((await createSessionClient()).ready, true);
+});

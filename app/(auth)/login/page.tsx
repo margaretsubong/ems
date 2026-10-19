@@ -21,9 +21,7 @@ export default function LoginPage() {
     const newErrors: Record<string, string> = {};
 
     if (!email.trim()) {
-      newErrors.email = "Company email is required.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Please enter a valid email address.";
+      newErrors.email = "Username or email is required.";
     }
 
     if (!password) {
@@ -82,9 +80,9 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <FormInput
           id="login-email"
-          label="Company Email"
-          type="email"
-          placeholder="you@company.com"
+          label="Username or Email"
+          type="text"
+          placeholder="Username or you@company.com"
           value={email}
           onChange={(val) => {
             setEmail(val);
@@ -92,7 +90,7 @@ export default function LoginPage() {
           }}
           error={errors.email}
           required
-          autoComplete="email"
+          autoComplete="username"
         />
 
         <FormInput

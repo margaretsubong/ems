@@ -76,7 +76,7 @@ export default function ActivateAccountPage() {
         </div>
       )}
 
-      {isSuccess && <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700" role="status">Check your email for a secure activation link. Your employee details alone do not activate your account.</p>}
+      {isSuccess && <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700" role="status">Check your email for your temporary username and password. Sign in with them, then set your own credentials.</p>}
       {/* Form */}
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <FormInput
@@ -118,7 +118,7 @@ export default function ActivateAccountPage() {
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            "Verify Account"
+            "Send Temporary Credentials"
           )}
         </button>
       </form>

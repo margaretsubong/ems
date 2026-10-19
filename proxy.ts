@@ -30,7 +30,7 @@ export async function proxy(request: NextRequest) {
     const portal = path === "/employee" || path.startsWith("/employee/") || path === "/manager" || path.startsWith("/manager/");
     if (!portal) {
       if (!error && user && request.cookies.get("ems-auth-flow")?.value) return response;
-      const destination = path === "/setup-account" ? "/activate-account?error=verification-required" : "/forgot-password?error=verification-required";
+      const destination = path === "/setup-account" ? "/login" : "/forgot-password?error=verification-required";
       const redirected = NextResponse.redirect(new URL(destination, request.url));
       for (const cookie of response.cookies.getAll()) redirected.cookies.set(cookie);
       redirected.headers.set("Cache-Control", "private, no-store");

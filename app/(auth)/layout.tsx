@@ -12,6 +12,7 @@ export default function AuthLayout({
         src="/images/authbg.png"
         alt=""
         fill
+        sizes="100vw"
         className="object-cover"
         priority
         aria-hidden="true"
@@ -32,6 +33,7 @@ export default function AuthLayout({
             src="/images/loginside.png"
             alt="Decorative abstract pastel design"
             fill
+            sizes="(min-width: 1024px) 414px, 1px"
             className="object-cover"
             priority
           />
